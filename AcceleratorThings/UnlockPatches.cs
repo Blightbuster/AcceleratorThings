@@ -31,13 +31,13 @@ namespace AcceleratorThings
             if (model.unlocked.Contains(SRLookup.Get<GadgetDefinition>("Accelerator").PediaEntry))
             {
                 GadgetDirector dir = __instance.GadgetDirector;
-                if (!dir.HasBlueprint(EntryPoint.triacceleratorDef))
+                if (!model.unlocked.Contains(EntryPoint.triacceleratorDef.PediaEntry))
                     shouldShowPopupTri = true;
-                if (!dir.HasBlueprint(EntryPoint.upcceleratorDef))
+                if (!model.unlocked.Contains(EntryPoint.upcceleratorDef.PediaEntry))
                     shouldShowPopupUp = true;
-                if (!dir.HasBlueprint(EntryPoint.vacceleratorDef))
+                if (!model.unlocked.Contains(EntryPoint.vacceleratorDef.PediaEntry))
                     shouldShowPopupVac = true;
-                if (!dir.HasBlueprint(EntryPoint.accelefilterDef))
+                if (!model.unlocked.Contains(EntryPoint.accelefilterDef.PediaEntry))
                     shouldShowPopupFilter = true;
             }
         }
