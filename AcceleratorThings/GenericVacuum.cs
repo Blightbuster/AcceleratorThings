@@ -1,13 +1,12 @@
 ﻿using Il2Cpp;
 using Il2CppMonomiPark.SlimeRancher;
+using Il2CppMonomiPark.SlimeRancher.UI.Framework.Interaction;
 using MelonLoader;
 using UnityEngine;
 
-namespace AcceleratorThings
-{
+namespace AcceleratorThings {
     [RegisterTypeInIl2Cpp]
-    public class GenericVacuum : SRBehaviour
-    {
+    public class GenericVacuum : SRBehaviour {
         public GameObject destroyOnVacFX;
         public GameObject vacJointPrefab;
 
@@ -22,13 +21,12 @@ namespace AcceleratorThings
 
         public int layerMask = -1677738245;
 
-        private TrackCollisions tracker;
-        private Accelerator accel;
+        public TrackCollisions tracker;
+        public Accelerator accel;
 
-        private List<Joint> joints = new List<Joint>();
+        public List<Joint> joints = new List<Joint>();
 
-        private void Start()
-        {
+        private void Start() {
             tracker = GetComponent<TrackCollisions>();
             accel = transform.parent.parent.GetComponentInChildren<Accelerator>();
             destroyOnVacFX = EntryPoint.destroyOnVacFX;
@@ -36,8 +34,7 @@ namespace AcceleratorThings
             vacOrigin = transform.FindChild("vac point");
         }
 
-        public void Update()
-        {
+        public void Update() {
             if (Time.timeScale == 0)
                 return;
 
@@ -48,17 +45,13 @@ namespace AcceleratorThings
 
         public void OnDestroy() => ClearVac();
 
-        public void ForceJoint(Vacuumable vacuumable)
-        {
+        public void ForceJoint(Vacuumable vacuumable) {
             vacuumable.capture(CreateJoint(vacuumable));
         }
 
-        public void ClearVac()
-        {
-            foreach (Joint joint in joints)
-            {
-                if (joint != null && joint.connectedBody != null)
-                {
+        public void ClearVac() {
+            foreach (Joint joint in joints) {
+                if (joint != null && joint.connectedBody != null) {
                     Vacuumable vacuumable = joint.connectedBody.GetComponent<Vacuumable>();
                     if (vacuumable)
                         vacuumable.release();
@@ -66,34 +59,32 @@ namespace AcceleratorThings
             }
         }
 
-        public void ConsumeVacItem(GameObject vacItem)
-        {
-            Vacuumable vacuumable = vacItem.GetComponent<Vacuumable>();
+        public void ConsumeVacItem(GameObject vacItem) {
+            RedirectVacCollision redirect = vacItem.GetComponent<RedirectVacCollision>();
+            Vacuumable vacuumable;
+            if (redirect != null && redirect.enabled) {
+                vacuumable = redirect.RedirectVacuumable;
+                vacItem = vacuumable.gameObject;
+            } else vacuumable = vacItem.GetComponent<Vacuumable>();
+            if (vacuumable == null || !vacuumable.enabled) return;
             IdentifiableActor ident = vacItem.GetComponent<IdentifiableActor>();
 
-            if (vacuumable && vacuumable.enabled)
-            {
-                if (Physics.Raycast(vacOrigin.position, vacItem.transform.position - vacOrigin.position, out RaycastHit hitInfo, maxVacDist, layerMask))
-                {
-                    if (hitInfo.rigidbody != null && hitInfo.rigidbody.gameObject == vacItem)
-                    {
-                        if (vacuumable.GetDestroyOnVac())
-                        {
+            if (vacuumable && vacuumable.enabled) {
+                if (Physics.Raycast(vacOrigin.position, vacItem.transform.position - vacOrigin.position, out RaycastHit hitInfo, maxVacDist, layerMask)) {
+                    if (hitInfo.rigidbody != null && hitInfo.rigidbody.gameObject == vacItem) {
+                        if (vacuumable.GetDestroyOnVac()) {
                             FXHelpers.SpawnAndPlayFX(destroyOnVacFX, vacItem.transform.position, vacItem.transform.rotation);
                             if (ident == null)
                                 Destroyer.Destroy(vacItem, "GenericVacuum.ConsumeVacItem#1");
                             else
                                 Destroyer.DestroyActor(vacItem, "GenericVacuum.ConsumeVacItem#2");
-                        }
-                        else
-                        {
+                        } else {
                             Rigidbody rb = vacItem.GetComponent<Rigidbody>();
 
                             if (vacuumable.isCaptive() && vacuumable.IsTornadoed())
                                 vacuumable.release();
 
-                            if (!vacuumable.isCaptive())
-                            {
+                            if (!vacuumable.isCaptive()) {
                                 if (rb.isKinematic)
                                     vacuumable.Pending = true;
                                 else
@@ -103,22 +94,18 @@ namespace AcceleratorThings
                     }
                 }
 
-                if (vacuumable.isCaptive() && Vector3.Distance(vacOrigin.position, vacItem.transform.position) <= accelDist)
-                {
+                if (vacuumable.isCaptive() && Vector3.Distance(vacOrigin.position, vacItem.transform.position) <= accelDist) {
                     vacuumable.release();
                     accel.LaunchObject(vacuumable.GetComponent<Rigidbody>());
                 }
             }
         }
 
-        private void ConsumeExistingJointed()
-        {
+        private void ConsumeExistingJointed() {
             joints.RemoveAll(x => x == null);
-            foreach (Joint joint in joints)
-            {
+            foreach (Joint joint in joints) {
                 SpringJoint springJoint = joint.Cast<SpringJoint>();
-                if (springJoint.connectedBody && !joint.connectedBody.isKinematic)
-                {
+                if (springJoint.connectedBody && !joint.connectedBody.isKinematic) {
                     float magnitude = springJoint.transform.localPosition.magnitude;
                     float t = magnitude / maxVacDist;
 
@@ -132,8 +119,7 @@ namespace AcceleratorThings
             }
         }
 
-        private Joint CreateJoint(Vacuumable vacuumable)
-        {
+        public Joint CreateJoint(Vacuumable vacuumable) {
             GameObject jointPre = Instantiate(vacJointPrefab);
             jointPre.transform.position = vacuumable.transform.position;
             jointPre.transform.SetParent(vacOrigin);
