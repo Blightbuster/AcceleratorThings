@@ -26,9 +26,11 @@ namespace AcceleratorThings
 
         public void OnTriggerEnter(Collider other)
         {
-            if (other.attachedRigidbody == null || Vacuumable.GetVacuumable(other.gameObject) == null)
+            Vacuumable vacuumable = null;
+            Vacuumable.TryGetVacuumable(other.gameObject, vacuumable);
+            if (other.attachedRigidbody == null || vacuumable == null)
                 return;
-            if (!accelOne.CanLaunchObject(other.attachedRigidbody))
+            if (!accelOne.CanLaunchObject(other.attachedRigidbody.gameObject))
                 return;
 
             IdentifiableType type = display.GetRelevantAmmo().Slots[0].Id;
