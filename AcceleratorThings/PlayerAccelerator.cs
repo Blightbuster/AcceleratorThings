@@ -37,7 +37,8 @@ namespace AcceleratorThings {
             Physics.IgnoreCollision(other, GetComponentInParent<MeshCollider>());
 
             var controller = ident.GetComponent<SRCharacterController>();
-            controller.UpdateVelocity(transform.forward * 600, Time.deltaTime);
+            var newVel = transform.forward * 600;
+            controller.UpdateVelocity(ref newVel, Time.deltaTime);
             nextLaunch = timeBetweenLaunches;
 
             SECTR_AudioSystem.Play(launchedCue, transform.position, false);
